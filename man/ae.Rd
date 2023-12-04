@@ -3,15 +3,13 @@
 \docType{data}
 \name{ae}
 \alias{ae}
-\title{Adverse event data
-
-Simulated adverse events for patients receiving two study agents.}
+\title{Simulated adverse events for patients receiving two study agents.}
 \format{
 A data frame with 394 rows and 9 variables:
 \describe{
 \item{Subject}{Patient ID}
 \item{ae_detail}{Adverse event detail, also known as lowest level term}
-\item{ae_category}{Adverse event category, also knoa as system organ class}
+\item{ae_category}{Adverse event category, also known as system organ class}
 \item{CTCAE5_LLT_NM}{Common Terminology Criteria for Adverse Events (CTCAE) version 5}
 \item{AE_VERBATIM_TRM_TXT}{Adverse event verbatim text entered by clinical registered nurse, for "Other, specify"}
 \item{AE_SEV_GD}{Adverse event severity grade, scale from 1 to 5}
@@ -24,8 +22,6 @@ A data frame with 394 rows and 9 variables:
 ae
 }
 \description{
-Adverse event data
-
 Simulated adverse events for patients receiving two study agents.
 }
 \keyword{datasets}

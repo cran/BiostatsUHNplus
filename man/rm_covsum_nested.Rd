@@ -24,6 +24,8 @@ rm_covsum_nested(
   show.tests = TRUE,
   just.nested.pvalue = FALSE,
   nCores = NULL,
+  nested.test = NULL,
+  nsim = NULL,
   testcont = c("rank-sum test", "ANOVA"),
   testcat = c("Chi-squared", "Fisher"),
   full = TRUE,
@@ -81,7 +83,7 @@ returned unformatted (ie not rounded or prefixed with '<'). Best used with
 tableOnly = T and outTable function.}
 
 \item{show.tests}{boolean indicating if the type of statistical used should
-be shown in a column beside the pvalues. Ignored if pvalue=FALSE.}
+be shown in a column beside the p-values. Ignored if pvalue=FALSE.}
 
 \item{just.nested.pvalue}{boolean indicating if the just the nested p-value
 should be shown in a column, and not unnested p-value, unnested statistical
@@ -89,6 +91,14 @@ tests and effect size. Overrides effSize and show.tests arguments.}
 
 \item{nCores}{number of cores to use for parallel processing if calculating
 the nested p-value (if provided).}
+
+\item{nested.test}{specifies test used for calculating nested p-value from
+afex::mixed function. Either \emph{parametric bootstrap} method
+or \emph{likelihood ratio test} method (default: "LRT"). Parametric bootstrap
+takes longer.}
+
+\item{nsim}{specifies number of simulations to use for calculating nested p-value
+with \emph{parametric bootstrap} method used for nested.test (default: 1000).}
 
 \item{testcont}{test of choice for continuous variables,one of
 \emph{rank-sum} (default) or \emph{ANOVA}}
@@ -132,13 +142,35 @@ which case a data frame is returned
 Outputs a nested version of reportRmd::rm_covsum()
 }
 \examples{
+\dontrun{
+# Example 1
 data(ae)
 rm_covsum_nested(data = ae, id = c("ae_detail", "Subject"), covs = c("AE_SEV_GD", 
 "AE_ONSET_DT_INT"), maincov = "CTC_AE_ATTR_SCALE")
+
+# Example 2: set variable labels and other options, save output with markup
+data("ae")
+lbls <- data.frame(c1=c('AE_SEV_GD','AE_ONSET_DT_INT'),
+    c2=c('Adverse event severity grade','Adverse event onset date'))
+ae$AE_SEV_GD <- as.numeric(ae$AE_SEV_GD)
+ae <- reportRmd::set_labels(ae, lbls)
+output_tab <- rm_covsum_nested(data = ae, id = c("ae_detail", "Subject"), 
+    covs = c("AE_SEV_GD", "AE_ONSET_DT_INT"), maincov = "CTC_AE_ATTR_SCALE", 
+    testcat = "Fisher", percentage = c("col"), show.tests = FALSE, pvalue = TRUE, 
+    effSize = FALSE, full = TRUE, IQR = FALSE, nicenames = TRUE, sanitize = TRUE, 
+    markup = TRUE, include_missing = TRUE, just.nested.pvalue = TRUE, 
+    tableOnly = TRUE)
+cat(reportRmd::outTable(tab=output_tab))
+cat(reportRmd::outTable(output_tab, format="html"), file = paste("./man/tables/", 
+    "output_tab.html", sep=""))
+cat(reportRmd::outTable(output_tab, format="latex"), file = paste("./man/tables/", 
+    "output_tab.tex", sep=""))
+}
 }
 \seealso{
 \code{\link{covsum}},\code{\link{fisher.test}},
 \code{\link{chisq.test}}, \code{\link{wilcox.test}},
-\code{\link{kruskal.test}}, \code{\link{anova}}, and \code{\link{outTable}}
+\code{\link{kruskal.test}}, \code{\link{anova}},
+\code{\link{mixed}} and \code{\link{outTable}}
 }
 \keyword{dataframe}

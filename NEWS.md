@@ -1,15 +1,9 @@
+# BiostatsUHNplus 0.0.9
+
+* Added functionality to include parametric bootstrapping for nested p-value in summary tables with parallel processing (PSOCK cluster) 
+* Added nice table of intraclass correlation coefficients from MCMCglmm::MCMCglmm() object with binary outcome
+* Added caterpillar plot for MCMCglmm::MCMCglmm() object with binary outcome
+
 # BiostatsUHNplus 0.0.8
 
-# BiostatsUHNplus 0.0.7
-
-# BiostatsUHNplus 0.0.6
-
-# BiostatsUHNplus 0.0.5
-
-# BiostatsUHNplus 0.0.4
-
-# BiostatsUHNplus 0.0.3
-
-# BiostatsUHNplus 0.0.2
-
-* 22 November 2023 first CRAN release
+* 28 November 2023 first CRAN release

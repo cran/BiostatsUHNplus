@@ -5,6 +5,15 @@ Note that the README.md document may need updating to change
 -->
 
 # BiostatsUHNplus
+<!-- badges: start -->
+
+[![Lifecycle:
+Stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/BiostatsUHNplus)](https://CRAN.R-project.org/package=BiostatsUHNplus)
+[![metacran
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/BiostatsUHNplus)](https://cran.r-project.org/package=BiostatsUHNplus)
+<!-- badges: end -->
 
 The goal of **BiostatsUHNplus** is to house publicly available code
 functions and snippets (some with multiple package dependencies) used by
@@ -15,19 +24,27 @@ Many of these functions build upon the features of
 
 ## Installation
 
-First, install the lastest version of **reportRmd** from
+First, install the latest version of **reportRmd** from
 [CRAN](https://cran.r-project.org/package=reportRmd) with:
 
 ``` r
 install.packages(c("reportRmd"), dependencies=TRUE);
 ```
 
-If version 0.1.0 or higher of **reportRmd** is installed, you can
-install **BiostatsUHNplus** from [GitHub](https://github.com/) with:
+Then install the latest version of **BiostatsUHNplus** from
+[CRAN](https://cran.r-project.org/package=BiostatsUHNplus) with:
+
+``` r
+install.packages(c("BiostatsUHNplus"), dependencies=TRUE);
+```
+
+If version 0.1.0 or higher of **reportRmd** is installed, the
+development version of **BiostatsUHNplus** can be installed from
+[GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("biostatsPMH/BiostatsUHNplus", ref="main")
+devtools::install_github("biostatsPMH/BiostatsUHNplus", ref="development")
 ```
 
 ## Documentation
@@ -48,18 +65,18 @@ z
 #>  [1]  1  2  3  4  5 NA  6  7  8  9 10 NA
 ```
 
-### Summary statistics of adverse events nested by participant in cohort, stratified by first attribution
+### Nested summary of adverse events by participant in cohort, stratified by attribution to first study drug
 
-Uses addendum simulated study data. Interpret summary output and
-unnested or nested p-value with caution!
+Uses addendum simulated study data and applies variable labels.
+Interpret summary output and unnested or nested p-value with caution!
 
-Note that if participants were enrolled in more than one cohort (crossover),
-or if repeat AEs in participant had different attribution, the total N
-for Full Sample will be less than that of the total N of attribution for
-first study drug. Since total N for Full Sample (234) is less than total
-N of the first study drug attribution categories (49 + 198), this
-suggests that there was instances of repeat AEs in participants having
-different attribution to first study drug.
+Note that if participants were enrolled in more than one cohort
+(crossover), or if repeat AEs in participant had different attribution,
+the total N for Full Sample will be less than that of the total N of
+attribution for first study drug. Since total N for Full Sample (234) is
+less than total N of the first study drug attribution categories (49 +
+198), this suggests that there was instances of repeat AEs in
+participants having different attribution to first study drug.
 
 ``` r
 library(plyr);
@@ -70,12 +87,22 @@ clinT <- plyr::join_all(list(enrollment, demography, ineligibility, ae),
   by = "Subject", type = "full");
 clinT$AE_SEV_GD <- as.numeric(clinT$AE_SEV_GD);
 clinT$Drug_1_Attribution <- "Unrelated";
-clinT$Drug_1_Attribution[clinT$CTC_AE_ATTR_SCALE %in% c("Definite", "Probable", "Possible")] <- "Related";
+clinT$Drug_1_Attribution[clinT$CTC_AE_ATTR_SCALE %in% 
+                           c("Definite", "Probable", "Possible")] <- "Related";
 clinT$Drug_2_Attribution <- "Unrelated";
-clinT$Drug_2_Attribution[clinT$CTC_AE_ATTR_SCALE_1 %in% c("Definite", "Probable", "Possible")] <- "Related";
+clinT$Drug_2_Attribution[clinT$CTC_AE_ATTR_SCALE_1 %in% 
+                           c("Definite", "Probable", "Possible")] <- "Related";
+lbls <- data.frame(c1=c("AE_SEV_GD", "ENROL_DATE_INT", "COHORT", "GENDER_CODE", 
+  "INELIGIBILITY_STATUS", "AE_ONSET_DT_INT", "Drug_2_Attribution", "ae_category"),
+  c2=c("Adverse event severity grade", "Enrollment date", "Cohort", "Gender", 
+       "Ineligibility", "Adverse event onset date", "Attribution to second study drug",
+       "Adverse event system organ class"));
+clinT <- reportRmd::set_labels(clinT, lbls);
 
 rm_covsum_nested(data = clinT, id = c("ae_detail", "Subject", "COHORT"), 
-  covs = c("AE_SEV_GD", "ENROL_DATE_INT", "COHORT", "GENDER_CODE", "INELIGIBILITY_STATUS", "AE_ONSET_DT_INT", "Drug_2_Attribution", "ae_category"), maincov = "Drug_1_Attribution");
+  covs = c("COHORT", "GENDER_CODE", "INELIGIBILITY_STATUS", "ENROL_DATE_INT", 
+           "AE_SEV_GD", "Drug_2_Attribution", "AE_ONSET_DT_INT", "ae_category"), 
+  maincov = "Drug_1_Attribution");
 ```
 
 <table class="table table" style="margin-left: auto; margin-right: auto; margin-left: auto; margin-right: auto;">
@@ -109,139 +136,7 @@ Nested p-value
 <tbody>
 <tr>
 <td style="text-align:left;">
-<span style="font-weight: bold;">AE SEV GD</span>
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-0.12
-</td>
-<td style="text-align:right;">
-0.098
-</td>
-<td style="text-align:right;">
-Wilcoxon Rank Sum, Wilcoxon r
-</td>
-<td style="text-align:right;">
-0.97
-</td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-Mean (sd)
-</td>
-<td style="text-align:right;">
-1.8 (0.8)
-</td>
-<td style="text-align:right;">
-2.0 (0.9)
-</td>
-<td style="text-align:right;">
-1.7 (0.8)
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-Median (Min,Max)
-</td>
-<td style="text-align:right;">
-1.5 (1.0, 5.0)
-</td>
-<td style="text-align:right;">
-2 (1, 4)
-</td>
-<td style="text-align:right;">
-1.5 (1.0, 5.0)
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-<span style="font-weight: bold;">ENROL DATE INT</span>
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-Wilcoxon Rank Sum, Wilcoxon r
-</td>
-<td style="text-align:right;">
-0.68
-</td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-Mean (sd)
-</td>
-<td style="text-align:right;">
-2017-01-07 (301.8 days)
-</td>
-<td style="text-align:right;">
-2017-01-31 (322.7 days)
-</td>
-<td style="text-align:right;">
-2016-12-28 (294.3 days)
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-Median (Min,Max)
-</td>
-<td style="text-align:right;">
-2016-09-14 (2016-01-18, 2018-05-16)
-</td>
-<td style="text-align:right;">
-2017-02-07 (2016-01-18, 2018-05-16)
-</td>
-<td style="text-align:right;">
-2016-09-14 (2016-01-18, 2018-05-16)
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-<td style="text-align:right;">
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-<span style="font-weight: bold;">COHORT</span>
+<span style="font-weight: bold;">Cohort</span>
 </td>
 <td style="text-align:right;">
 </td>
@@ -352,7 +247,7 @@ Cohort D
 </tr>
 <tr>
 <td style="text-align:left;">
-<span style="font-weight: bold;">GENDER CODE</span>
+<span style="font-weight: bold;">Gender</span>
 </td>
 <td style="text-align:right;">
 </td>
@@ -419,7 +314,7 @@ Male
 </tr>
 <tr>
 <td style="text-align:left;">
-<span style="font-weight: bold;">INELIGIBILITY STATUS</span>
+<span style="font-weight: bold;">Ineligibility</span>
 </td>
 <td style="text-align:right;">
 </td>
@@ -483,7 +378,7 @@ Missing
 </tr>
 <tr>
 <td style="text-align:left;">
-<span style="font-weight: bold;">AE ONSET DT INT</span>
+<span style="font-weight: bold;">Enrollment date</span>
 </td>
 <td style="text-align:right;">
 </td>
@@ -499,7 +394,6 @@ Missing
 Wilcoxon Rank Sum, Wilcoxon r
 </td>
 <td style="text-align:right;">
-0.64
 </td>
 </tr>
 <tr>
@@ -507,13 +401,13 @@ Wilcoxon Rank Sum, Wilcoxon r
 Mean (sd)
 </td>
 <td style="text-align:right;">
-2017-11-03 (161.1 days)
+2017-01-07 (301.8 days)
 </td>
 <td style="text-align:right;">
-2017-10-01 (146.6 days)
+2017-01-31 (322.7 days)
 </td>
 <td style="text-align:right;">
-2017-11-10 (161.2 days)
+2016-12-28 (294.3 days)
 </td>
 <td style="text-align:right;">
 </td>
@@ -529,13 +423,13 @@ Mean (sd)
 Median (Min,Max)
 </td>
 <td style="text-align:right;">
-2017-10-05 (2016-05-02, 2019-01-13)
+2016-09-14 (2016-01-18, 2018-05-16)
 </td>
 <td style="text-align:right;">
-2017-09-07 (2017-03-18, 2018-11-24)
+2017-02-07 (2016-01-18, 2018-05-16)
 </td>
 <td style="text-align:right;">
-2017-10-15 (2016-05-02, 2019-01-13)
+2016-09-14 (2016-01-18, 2018-05-16)
 </td>
 <td style="text-align:right;">
 </td>
@@ -548,7 +442,74 @@ Median (Min,Max)
 </tr>
 <tr>
 <td style="text-align:left;">
-<span style="font-weight: bold;">Drug 2 Attribution</span>
+<span style="font-weight: bold;">Adverse event severity grade</span>
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+0.12
+</td>
+<td style="text-align:right;">
+0.098
+</td>
+<td style="text-align:right;">
+Wilcoxon Rank Sum, Wilcoxon r
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mean (sd)
+</td>
+<td style="text-align:right;">
+1.8 (0.8)
+</td>
+<td style="text-align:right;">
+2.0 (0.9)
+</td>
+<td style="text-align:right;">
+1.7 (0.8)
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Median (Min,Max)
+</td>
+<td style="text-align:right;">
+1.5 (1.0, 5.0)
+</td>
+<td style="text-align:right;">
+2 (1, 4)
+</td>
+<td style="text-align:right;">
+1.5 (1.0, 5.0)
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="font-weight: bold;">Attribution to second study drug</span>
 </td>
 <td style="text-align:right;">
 </td>
@@ -615,7 +576,71 @@ Unrelated
 </tr>
 <tr>
 <td style="text-align:left;">
-<span style="font-weight: bold;">ae category</span>
+<span style="font-weight: bold;">Adverse event onset date</span>
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+Wilcoxon Rank Sum, Wilcoxon r
+</td>
+<td style="text-align:right;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mean (sd)
+</td>
+<td style="text-align:right;">
+2017-11-03 (161.1 days)
+</td>
+<td style="text-align:right;">
+2017-10-01 (146.6 days)
+</td>
+<td style="text-align:right;">
+2017-11-10 (161.2 days)
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Median (Min,Max)
+</td>
+<td style="text-align:right;">
+2017-10-05 (2016-05-02, 2019-01-13)
+</td>
+<td style="text-align:right;">
+2017-09-07 (2017-03-18, 2018-11-24)
+</td>
+<td style="text-align:right;">
+2017-10-15 (2016-05-02, 2019-01-13)
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="font-weight: bold;">Adverse event system organ class</span>
 </td>
 <td style="text-align:right;">
 </td>
@@ -1205,7 +1230,8 @@ p <- ae_timeline_plot(subjID="Subject",subjID_ineligText=c("New Subject","Test")
                  startDtVars=c("ENROL_DATE_INT"),ae_detailVar="ae_detail",
                  ae_categoryVar="ae_category",ae_severityVar="AE_SEV_GD",
                  ae_onsetDtVar="AE_ONSET_DT_INT",time_unit="week")
-ggplot2::ggsave(paste("man/figures/ae_detail_timeline_plot", ".png", sep=""), p, width=6.4, height=10, device="png", scale = 1.15);
+ggplot2::ggsave(paste("man/figures/ae_detail_timeline_plot", ".png", sep=""), p, 
+                width=6.4, height=10, device="png", scale = 1.15);
 ```
 
 <img src="man/figures/ae_detail_timeline_plot.png" width="100%" />
@@ -1240,7 +1266,8 @@ p <- ae_timeline_plot(subjID="Subject",subjID_ineligText=c("New Subject","Test")
                                  "#01796F","#FFA343","#CC7722","#E0B0FF","#5A4FCF"),
                  attribSymbols=c(5,6,7,8,15,16,17,18,19,20),
                  columnWidths=c(23,15))
-ggplot2::ggsave(paste("man/figures/ae_category_timeline_plot", ".png", sep=""), p, width=3.6, height=5.4, device="png", scale = 1);
+ggplot2::ggsave(paste("man/figures/ae_category_timeline_plot", ".png", sep=""), p, 
+                width=3.6, height=5.4, device="png", scale = 1);
 ```
 
 <img src="man/figures/ae_category_timeline_plot.png" width="100%" />
@@ -1275,7 +1302,243 @@ p <- ae_timeline_plot(subjID="Subject",subjID_ineligText=c("01","11"),
                  attribColours=c("#9AB973","#01796F","#FFA343","#CC7722"),   
                  attribSymbols=c(7,8,5,6),
                  columnWidths=c(23))
-ggplot2::ggsave(paste("man/figures/ae_category_attribStart_timeline_plot", ".png", sep=""), p, width=4.2, height=5.4, device="png", scale = 1);
+ggplot2::ggsave(paste("man/figures/ae_category_attribStart_timeline_plot", ".png", sep=""), 
+                p, width=4.2, height=5.4, device="png", scale = 1);
 ```
 
 <img src="man/figures/ae_category_attribStart_timeline_plot.png" width="100%" />
+
+### Summary functions for MCMCglmm object with binary outcome
+
+#### Model output for fixed effects
+
+Below runs a logistic MCMCglmm model on the odds of grade 3 or higher
+adverse event, controlling for attribution of first and second
+intervention drugs. Subject and system organ class are treated as random
+effects. Model has 800 posterior samples. Should specify burnin=125000,
+nitt=625000 and thin=100 for 5000 posterior samples with lower
+autocorrelation. Aim for effective sample sizes of at least 2000.
+
+``` r
+data("ae");
+
+ae$G3Plus <- 0;
+ae$G3Plus[ae$AE_SEV_GD %in% c("3", "4", "5")] <- 1;
+ae$Drug_1_Attribution <- "No";
+ae$Drug_1_Attribution[ae$CTC_AE_ATTR_SCALE %in% c("Definite", "Probable", "Possible")] <- "Yes";
+ae$Drug_2_Attribution <- "No";
+ae$Drug_2_Attribution[ae$CTC_AE_ATTR_SCALE_1 %in% c("Definite", "Probable", "Possible")] <- "Yes";
+
+prior2RE <- list(R = list(V = diag(1), fix = 1),
+  G=list(G1=list(V=1, nu=0.02), G2=list(V=1, nu=0.02)));
+  
+model1 <- MCMCglmm::MCMCglmm(G3Plus ~ Drug_1_Attribution + Drug_2_Attribution, 
+  random=~Subject + ae_category, family="categorical", data=ae, saveX=TRUE, 
+  verbose=F, burnin=2000, nitt=10000, thin=10, pr=TRUE, prior=prior2RE);
+
+mcmcglmm_mva <- nice_mcmcglmm(model1, ae);
+options(knitr.kable.NA = '');
+knitr::kable(mcmcglmm_mva);
+```
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:left;">
+Levels
+</th>
+<th style="text-align:left;">
+OR (95% HPDI)
+</th>
+<th style="text-align:left;">
+MCMCp
+</th>
+<th style="text-align:left;">
+eff.samp
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Drug 1 Attribution
+</td>
+<td style="text-align:left;">
+No
+</td>
+<td style="text-align:left;">
+reference
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Yes
+</td>
+<td style="text-align:left;">
+2.77 (1.22, 6.93)
+</td>
+<td style="text-align:left;">
+0.022
+</td>
+<td style="text-align:left;">
+193.23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Drug 2 Attribution
+</td>
+<td style="text-align:left;">
+No
+</td>
+<td style="text-align:left;">
+reference
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Yes
+</td>
+<td style="text-align:left;">
+0.45 (0.16, 1.35)
+</td>
+<td style="text-align:left;">
+0.145
+</td>
+<td style="text-align:left;">
+156.40
+</td>
+</tr>
+</tbody>
+</table>
+
+#### Intraclass correlation coefficients
+
+Most of the observed variation in grade 3 or higher adverse event status
+is attributable to adverse event category, also known as system organ
+class.
+
+``` r
+mcmcglmm_icc <- nice_mcmcglmm_icc(model1, prob=0.95, decimals=4);
+options(knitr.kable.NA = '');
+knitr::kable(mcmcglmm_icc);
+```
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+ICC
+</th>
+<th style="text-align:right;">
+lower
+</th>
+<th style="text-align:right;">
+upper
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Subject
+</td>
+<td style="text-align:right;">
+0.0583
+</td>
+<td style="text-align:right;">
+0.0068
+</td>
+<td style="text-align:right;">
+0.3010
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ae_category
+</td>
+<td style="text-align:right;">
+0.8144
+</td>
+<td style="text-align:right;">
+0.5145
+</td>
+<td style="text-align:right;">
+0.9572
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+units
+</td>
+<td style="text-align:right;">
+0.0725
+</td>
+<td style="text-align:right;">
+0.0272
+</td>
+<td style="text-align:right;">
+0.2458
+</td>
+</tr>
+</tbody>
+</table>
+
+#### Caterpillar plots of random effects - participant
+
+After controlling for first and second drug attributions, subject 01 has
+a higher odds for grade 3 or higher adverse event than the average of
+study participants.
+
+``` r
+p <- caterpillar_plot(subjID = "Subject",
+  mcmcglmm_object = model1,
+  prob = 0.95,
+  orig_dataset = ae,
+  ncol = 2,
+  binaryOutcomeVar = "G3Plus")
+ggplot2::ggsave(paste("man/figures/caterpillar_plot_subject", ".png", sep=""), 
+       p, scale = 1.0, width=6.4, height=3.4, device="png");
+```
+
+<img src="man/figures/caterpillar_plot_subject.png" width="100%" />
+
+#### Caterpillar plots of random effects - system organ class
+
+Highest posterior density intervals, also known as credible intervals,
+are not symmetric. Need to run model for more iterations with higher
+burnin.
+
+``` r
+p <- caterpillar_plot(subjID = "ae_category",
+  mcmcglmm_object = model1,
+  prob = 0.95,
+  orig_dataset = ae,
+  ncol = 4,
+  binaryOutcomeVar = "G3Plus",
+  subtitle = "System organ class (n, events)",
+  title = "Odds Ratio for G3+ Severity with 95% Highest Posterior Density Interval",
+  fonts = c("Arial", "Arial", "Arial", "Arial"),
+  break.label.summary = TRUE)
+ggplot2::ggsave(paste("man/figures/caterpillar_plot_ae_category", ".png", sep=""), 
+       p, scale = 1.0, width=6.4, height=4.0, device="png");
+```
+
+<img src="man/figures/caterpillar_plot_ae_category.png" width="100%" />
