@@ -14,7 +14,7 @@
 #' @param baseline_datasets list of data frames that contain baseline participant characteristics,
 #'    for example, list(enrollment_DF,demography_DF,ineligibility_DF)
 #' @param ae_dataset data frame that contains subject AEs
-#' @param ineligVar field that denotes participant ineligibility
+#' @param ineligVar field that denotes participant ineligibility (if provided)
 #' @param ineligVarText character text that denotes participant ineligibility,
 #'    for example, c("Yes", "Y") (if provided)
 #' @param genderVar field that denotes participant gender
@@ -53,7 +53,7 @@
 
 dsmb_ccru <- function(protocol,setwd,title,comp=NULL,pi,presDate,cutDate,boundDate=NULL,
                       subjID,subjID_ineligText=NULL,baseline_datasets,ae_dataset,
-                      ineligVar,ineligVarText=NULL,
+                      ineligVar=NULL,ineligVarText=NULL,
                       genderVar,enrolDtVar,ae_detailVar,ae_categoryVar,
                       ae_severityVar,ae_onsetDtVar,ae_detailOtherText=NULL,ae_detailOtherVar=NULL,
                       ae_verbatimVar=NULL,numSubj=NULL,fileNameUnderscore=TRUE){
@@ -134,6 +134,12 @@ dsmb_ccru <- function(protocol,setwd,title,comp=NULL,pi,presDate,cutDate,boundDa
   if (is.null(ae_detailOtherText)) {
     ae_detailOtherText <- "Other, specify";
   }
+  if (is.null(ineligVar)) {
+    ineligVar <- subjID;
+  }
+  if (is.null(ineligVarText)) {
+    ineligVarText <- "Not using this";
+  }
   if (is.null(comp)) {
     subjectsKeep_DF <- plyr::join_all(baseline_datasets, by = subjID, type = "full") |>
       #### --------------------------------------------- ####
@@ -184,14 +190,15 @@ dsmb_ccru <- function(protocol,setwd,title,comp=NULL,pi,presDate,cutDate,boundDa
       dplyr::select(Subject, AE_ONSET_DT_INT, ae_detail, ae_category, ae_grade_code_dyn_std, PARTIC_ENROL_DT_INT, CTCAE5_LLT_NM, AE_VERBATIM_TRM_TXT) |>
       dplyr::arrange(Subject) |>
       dplyr::filter(as.Date(PARTIC_ENROL_DT_INT, "%d%b%Y") <= as.Date(cutDate, "%d%b%Y"), as.Date(AE_ONSET_DT_INT, "%d%b%Y") <= as.Date(cutDate, "%d%b%Y"), !is.na(ae_detail)) |>
-      dplyr::distinct(Subject, AE_ONSET_DT_INT, ae_detail, ae_category, ae_grade_code_dyn_std, PARTIC_ENROL_DT_INT)
+      dplyr::distinct(Subject, AE_ONSET_DT_INT, ae_detail, ae_category, ae_grade_code_dyn_std, PARTIC_ENROL_DT_INT) |>
+      dplyr::mutate(ae_grade_code_dyn_std = as.numeric(gsub("[^0-9.-]", "", ae_grade_code_dyn_std))) 
     #write.xlsx(aes1_DF, file=paste("aes1_DF", ".xlsx", sep=""), sheetName="AEs check", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=FALSE);
     #unique(aes1_DF$ae_detail);
     
     aes2_DF <- aes1_DF |>  
-      dplyr::distinct(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
-      dplyr::group_by(Subject, ae_detail) |>
-      dplyr::filter(ae_grade_code_dyn_std == max(ae_grade_code_dyn_std)) |>
+      #dplyr::distinct(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      #dplyr::group_by(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      #dplyr::filter(ae_grade_code_dyn_std == max(ae_grade_code_dyn_std)) |>
       dplyr::arrange(Subject) 
     
     total_subj_count <- length(unique(subjects_DF$Subject));
@@ -203,10 +210,16 @@ dsmb_ccru <- function(protocol,setwd,title,comp=NULL,pi,presDate,cutDate,boundDa
     
     #### Table 1;
     table1_dfa <- aes2_DF |>
+      dplyr::distinct(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::group_by(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::filter(ae_grade_code_dyn_std == max(ae_grade_code_dyn_std)) |>
       dplyr::group_by(ae_category, ae_detail) |>
       dplyr::summarise(ind = n_distinct(Subject)) |>
       dplyr::mutate(ind_per = format(round((ind/total_subj_count)*100, 2), nsmall=2))
     table1_dfb <- aes2_DF |>
+      dplyr::distinct(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::group_by(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::filter(ae_grade_code_dyn_std == max(ae_grade_code_dyn_std)) |>
       dplyr::group_by(ae_category, ae_detail) |>
       dplyr::filter(ae_grade_code_dyn_std %in% c(3:5)) |>
       dplyr::summarise(indH = n_distinct(Subject)) |>
@@ -250,10 +263,16 @@ dsmb_ccru <- function(protocol,setwd,title,comp=NULL,pi,presDate,cutDate,boundDa
     
     #### Table 2; 
     table2_dfa <- aes2_DF |>
+      dplyr::distinct(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::group_by(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::filter(ae_grade_code_dyn_std == max(ae_grade_code_dyn_std)) |>
       dplyr::group_by(ae_category) |>
       dplyr::summarise(ind = n_distinct(Subject)) |>
       dplyr::mutate(ind_per = format(round((ind/total_subj_count)*100, 2), nsmall=2))
     table2_dfb <- aes2_DF |>
+      dplyr::distinct(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::group_by(Subject, ae_category, ae_detail, ae_grade_code_dyn_std) |>
+      dplyr::filter(ae_grade_code_dyn_std == max(ae_grade_code_dyn_std)) |>
       dplyr::group_by(ae_category) |>
       dplyr::filter(ae_grade_code_dyn_std %in% c(3:5)) |>
       dplyr::summarise(indH = n_distinct(Subject)) |>
@@ -337,7 +356,6 @@ dsmb_ccru <- function(protocol,setwd,title,comp=NULL,pi,presDate,cutDate,boundDa
     setRowHeights(wb, 1, rows = 9, heights = 82); 
     setColWidths(wb, 1, cols = c(1, 2, 3, 4, 5), widths = c(34, 15, 15, 15, 15));
     OutsideBorders(wb, sheet_ = 1, rows_ = 9:(length(table3_df[, 1])+9), cols_ = 1:5);
-    trimws("dsmb_ccru_tables/category ByEvent EXAMPLE_STUDY Cohort D 30OCT2020.xlsx");
     if (fileNameUnderscore == TRUE) {
       table3_fn <- chartr(" ", "_", table3_fn);
     }

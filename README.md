@@ -5,6 +5,7 @@ Note that the README.md document may need updating to change
 -->
 
 # BiostatsUHNplus
+
 <!-- badges: start -->
 
 [![Lifecycle:
@@ -1334,7 +1335,7 @@ prior2RE <- list(R = list(V = diag(1), fix = 1),
   
 model1 <- MCMCglmm::MCMCglmm(G3Plus ~ Drug_1_Attribution + Drug_2_Attribution, 
   random=~Subject + ae_category, family="categorical", data=ae, saveX=TRUE, 
-  verbose=F, burnin=2000, nitt=10000, thin=10, pr=TRUE, prior=prior2RE);
+  verbose=F, burnin=4000, nitt=12000, thin=10, pr=TRUE, prior=prior2RE);
 
 mcmcglmm_mva <- nice_mcmcglmm(model1, ae);
 options(knitr.kable.NA = '');
@@ -1384,13 +1385,13 @@ reference
 Yes
 </td>
 <td style="text-align:left;">
-2.77 (1.22, 6.93)
+2.73 (1.12, 7.17)
 </td>
 <td style="text-align:left;">
-0.022
+0.030
 </td>
 <td style="text-align:left;">
-193.23
+205.12
 </td>
 </tr>
 <tr>
@@ -1415,13 +1416,13 @@ reference
 Yes
 </td>
 <td style="text-align:left;">
-0.45 (0.16, 1.35)
+0.43 (0.14, 1.17)
 </td>
 <td style="text-align:left;">
-0.145
+0.115
 </td>
 <td style="text-align:left;">
-156.40
+155.97
 </td>
 </tr>
 </tbody>
@@ -1461,13 +1462,13 @@ upper
 Subject
 </td>
 <td style="text-align:right;">
-0.0583
+0.0873
 </td>
 <td style="text-align:right;">
-0.0068
+0.0070
 </td>
 <td style="text-align:right;">
-0.3010
+0.3423
 </td>
 </tr>
 <tr>
@@ -1475,13 +1476,13 @@ Subject
 ae_category
 </td>
 <td style="text-align:right;">
-0.8144
+0.7926
 </td>
 <td style="text-align:right;">
-0.5145
+0.4533
 </td>
 <td style="text-align:right;">
-0.9572
+0.9116
 </td>
 </tr>
 <tr>
@@ -1489,13 +1490,13 @@ ae_category
 units
 </td>
 <td style="text-align:right;">
-0.0725
+0.1412
 </td>
 <td style="text-align:right;">
-0.0272
+0.0422
 </td>
 <td style="text-align:right;">
-0.2458
+0.2609
 </td>
 </tr>
 </tbody>
@@ -1532,13 +1533,14 @@ p <- caterpillar_plot(subjID = "ae_category",
   prob = 0.95,
   orig_dataset = ae,
   ncol = 4,
+  columnTextWidth = 22,
   binaryOutcomeVar = "G3Plus",
   subtitle = "System organ class (n, events)",
   title = "Odds Ratio for G3+ Severity with 95% Highest Posterior Density Interval",
   fonts = c("Arial", "Arial", "Arial", "Arial"),
   break.label.summary = TRUE)
 ggplot2::ggsave(paste("man/figures/caterpillar_plot_ae_category", ".png", sep=""), 
-       p, scale = 1.0, width=6.4, height=4.0, device="png");
+       p, scale = 1.3, width=6.4, height=3.8, device="png");
 ```
 
 <img src="man/figures/caterpillar_plot_ae_category.png" width="100%" />

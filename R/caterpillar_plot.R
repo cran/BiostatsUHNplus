@@ -2,6 +2,8 @@
 #' such as MCMCglmm::MCMCglmm() object, that have binary outcome.
 #'
 #' @param subjID key identifier field for participant ID in data sets
+#' @param subjLabel text label field in dataset to replace key identifier field for 
+#'    participant ID with in plot (if provided)
 #' @param remove.text.subjID boolean indicating if non-numeric text should be 
 #'    removed from subjID in plot label. Note that this can only be used if there
 #'    are non-duplicate participant IDs when non-numeric text is removed. Default 
@@ -29,7 +31,7 @@
 #' @importFrom MCMCglmm posterior.mode 
 #' @importFrom coda HPDinterval
 #' @importFrom purrr modify_if
-#' @importFrom dplyr select rename group_by arrange filter row_number n
+#' @importFrom dplyr select rename group_by arrange filter row_number n all_of
 #' @importFrom stringr str_wrap
 #' @import ggplot2
 #' @import lifecycle
@@ -69,7 +71,7 @@
 #'   fonts = c("Arial", "Arial", "Arial", "Arial"),
 #'   break.label.summary = TRUE)
 
-caterpillar_plot <- function(subjID,
+caterpillar_plot <- function(subjID,subjLabel=NULL,
                              remove.text.subjID=FALSE,
                              mcmcglmm_object,orig_dataset,
                              binaryOutcomeVar,
@@ -128,30 +130,60 @@ caterpillar_plot <- function(subjID,
   ranefSubjs$lower <- exp(ranefSubjs$lower);
   ranefSubjs$upper <- exp(ranefSubjs$upper);
   
-  if (remove.text.subjID == TRUE) {
-    rownames(ranefSubjs) <- gsub("[^0-9]", "", rownames(ranefSubjs)); #This removes non-numerical text from cow identifier, may not want to do if there are duplicate numbers when removing text; 
-  }
+  # if (remove.text.subjID == TRUE) {
+  #   rownames(ranefSubjs) <- gsub("[^0-9]", "", rownames(ranefSubjs)); #This removes non-numerical text from cow identifier, may not want to do if there are duplicate numbers when removing text;
+  # }
   
   ranefSubjs$ID <- rownames(ranefSubjs);
   ranefSubjs$term <- reorder(factor(rownames(ranefSubjs)), ranefSubjs$est);
   
-  instSubj <- orig_dataset |> 
-    dplyr::rename(ID = subjID) |>
-    dplyr::select(ID) |>
-    dplyr::group_by(ID, .drop = FALSE) |>  
-    dplyr::count(name="instances", .drop=FALSE) 
-  hp_instSubj <- orig_dataset |> 
-    dplyr::rename(ID = subjID) |>
-    dplyr::select("ID", binaryOutcomeVar) |>
-    dplyr::group_by(ID, .drop = FALSE) |>  
-    dplyr::filter(get(binaryOutcomeVar) == 1) |>
-    dplyr::count(get(binaryOutcomeVar), name="hp_instances") |>
-    dplyr::select(-"get(binaryOutcomeVar)") 
+  if (is.null(subjLabel)) {
+    tryCatch({
+      subjLabel <- subjID;
+    }, error=function(e){})
+  }
   
-  ranefSubjs <- plyr::join_all(list(ranefSubjs, instSubj[, c("ID", "instances")], hp_instSubj[, c("ID", "hp_instances")]), by=c("ID"), type='left', match = "first");
+  instSubj <- orig_dataset |> 
+    dplyr::mutate(ID = get(subjID), ID_label = as.character(get(subjLabel))) |>
+    dplyr::select("ID", "ID_label") |>
+    dplyr::group_by(ID, ID_label, .drop = FALSE) |>  
+    dplyr::count(name="instances", .drop = FALSE) 
+  hp_instSubj <- orig_dataset |> 
+    dplyr::mutate(ID = get(subjID), ID_label = as.character(get(subjLabel))) |>
+    dplyr::select(ID, ID_label, dplyr::all_of(binaryOutcomeVar)) |>
+    dplyr::group_by(ID, ID_label, .drop = FALSE) |>  
+    dplyr::filter(get(binaryOutcomeVar) == 1) |>
+    dplyr::count(get(binaryOutcomeVar), name="hp_instances", .drop=FALSE) |>
+    dplyr::select(-"get(binaryOutcomeVar)") 
+  hp_instSubj$ID_label[which(is.na(hp_instSubj$ID_label))] <- as.character(hp_instSubj$ID[which(is.na(hp_instSubj$ID_label))]);
+  
+  instSubj <- as.data.frame(instSubj);
+  hp_instSubj <- as.data.frame(hp_instSubj);
+  ranefSubjs$ID <- as.character(ranefSubjs$ID);
+  instSubj$ID <- as.character(instSubj$ID);
+  instSubj$ID_label <- as.character(instSubj$ID_label);
+  instSubj$instances <- as.integer(instSubj$instances);
+  hp_instSubj$ID <- as.character(hp_instSubj$ID);
+  hp_instSubj$ID_label <- as.character(hp_instSubj$ID_label);
+  hp_instSubj$hp_instances <- as.integer(hp_instSubj$hp_instances);
+  ranefSubjs <- plyr::join_all(list(ranefSubjs, instSubj[, c("ID", "ID_label", "instances")], hp_instSubj[, c("ID", "ID_label", "hp_instances")]), by=c("ID"), type='left', match = "first");
   ranefSubjs$instances[which(is.na(ranefSubjs$instances))] <- 0;
   ranefSubjs$hp_instances[which(is.na(ranefSubjs$hp_instances))] <- 0;
+  #str(ranefSubjs);
   
+  if (!is.null(subjLabel)) {
+    tryCatch({
+      ranefSubjs$term <- as.character(ranefSubjs$ID_label);
+    }, error=function(e){})
+  }
+  
+  if (remove.text.subjID == TRUE) {
+    ranefSubjs$term <- gsub("[^0-9]", "", ranefSubjs$term); #This removes non-numerical text from cow identifier, may not want to do if there are duplicate numbers when removing text;
+  }
+  
+  ranefSubjs <- ranefSubjs |>
+    dplyr::select(ID, est, lower, upper, term, instances, hp_instances)
+
   if (break.label.summary == TRUE) {
     ranefSubjs$term <- stringr::str_wrap(ranefSubjs$term, width = columnTextWidth);
     ranefSubjs$term <- paste(ranefSubjs$term, "\n(", ranefSubjs$instances, ", ", ranefSubjs$hp_instances, ")", sep="");
@@ -164,7 +196,7 @@ caterpillar_plot <- function(subjID,
   num_groups <- ncol;
   ranefSubjs <- ranefSubjs |>
     dplyr::arrange(est) |>
-    dplyr::group_by(facet=(row_number()-1) %/% (n()/num_groups)+1)
+    dplyr::group_by(facet=(dplyr::row_number()-1) %/% (dplyr::n()/num_groups)+1)
   ranefSubjs$facet <- as.factor(ranefSubjs$facet);
   ranefSubjs$facet <- ordered(ranefSubjs$facet, levels = c(as.character(rev(seq(1:ncol)))));
   ranefSubjs$significance <- "normal";
@@ -172,6 +204,21 @@ caterpillar_plot <- function(subjID,
   ranefSubjs$lower <- as.numeric(format(round(ranefSubjs$lower, 2), nsmall=2));
   ranefSubjs$upper <- as.numeric(format(round(ranefSubjs$upper, 2), nsmall=2));
   ranefSubjs$significance[(ranefSubjs$lower >= 1.00 & ranefSubjs$upper >= 1.00) | (ranefSubjs$lower <= 1.00 & ranefSubjs$upper <= 1.00)] <- "different";
+  
+  my_breaks <- function(x) {
+    #min_x=round(min(x),1)
+    #max_x=round(max(x),1)
+    min_x=min(x)
+    max_x=max(x)
+    if (min_x < 0.0) {
+      min_x <- 0.0
+    }
+    my_pretty=c(min_x, max_x)
+    my_pretty
+    
+  } 
+  
+  scaleFUN <- function(x) sprintf("%.1f", x)
   
   options(warn=-1); #suppress warning messages;
   pPlot <- 
@@ -182,15 +229,17 @@ caterpillar_plot <- function(subjID,
           panel.grid.minor = element_blank(),
           panel.border = element_blank(),
           panel.background = element_blank()) +
-    geom_pointrange(aes(ymin=lower, ymax=upper, color=significance)) +
-    guides(color=FALSE) +
+    geom_pointrange(aes(ymin=lower, ymax=upper, color=significance), fatten=2) +
+    guides(color="none") +
     scale_color_manual(values=c("normal"="darkgrey", "different"="black")) +
     facet_wrap(~facet, dir="v", scales="free", ncol=ncol) +
-    scale_y_continuous(limits = ~ c(0, ceiling(max(.x))), breaks = ~ c(0, floor(max(.x))), expand = c(0.12, 0.05)) +
+    scale_y_continuous(breaks = ~ my_breaks(.x), labels=scaleFUN ) +
+    #scale_y_continuous(limits = ~ c(round(min(.x),digits=1), round(max(.x),digits=1)) ) +
+    #scale_y_continuous(limits = ~ c(round(min(.x),digits=1), round(max(.x),digits=1)), breaks = ~ my_breaks(.x), labels=scaleFUN ) +
     coord_flip() + 
     theme(plot.title=element_text(family=font.title, size=14, hjust=0.5), plot.subtitle=element_text(family=font.subtitle, size=12), axis.text.y=element_text(family=font.labels, size=8), axis.text.x=element_text(family=font.axis), axis.title.x=element_blank(), axis.title.y=element_blank()) + 
     theme(plot.title.position = "plot", plot.subtitle = element_text(hjust = 0.5), strip.background = element_blank(), strip.text.x = element_blank()) +
-    theme(strip.text = element_blank(), panel.margin.y = unit(-0, "lines"), axis.ticks.y=element_blank()) +
+    theme(strip.text = element_blank(), plot.margin=unit(c(0,1,0,0),"lines"), axis.ticks.length = unit(0.0, "lines"), axis.ticks=element_blank(), panel.spacing.y = unit(1.0, "lines"), axis.ticks.y=element_blank()) +
     labs(title=paste(title), subtitle=paste(subtitle), caption="");
   
   return(pPlot)
