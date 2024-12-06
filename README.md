@@ -16,9 +16,8 @@ status](https://www.r-pkg.org/badges/version/BiostatsUHNplus)](https://CRAN.R-pr
 downloads](https://cranlogs.r-pkg.org/badges/grand-total/BiostatsUHNplus)](https://cran.r-project.org/package=BiostatsUHNplus)
 <!-- badges: end -->
 
-The goal of **BiostatsUHNplus** is to house publicly available code
-functions and snippets (some with multiple package dependencies) used by
-[Biostatistics@UHN](https://www.biostatsuhn.com/) in Toronto, Canada.
+The goal of **BiostatsUHNplus** is to house publicly available code snippets and functions (some with multiple package dependencies) used by
+[Biostatistics@UHN](https://biostats.uhnresearch.ca/) in Toronto, Canada.
 
 Many of these functions build upon the features of
 [**reportRmd**](https://github.com/biostatsPMH/reportRmd).
@@ -1385,13 +1384,13 @@ reference
 Yes
 </td>
 <td style="text-align:left;">
-2.73 (1.12, 7.17)
+2.74 (0.95, 7.56)
 </td>
 <td style="text-align:left;">
-0.030
+0.065
 </td>
 <td style="text-align:left;">
-205.12
+128.63
 </td>
 </tr>
 <tr>
@@ -1416,13 +1415,13 @@ reference
 Yes
 </td>
 <td style="text-align:left;">
-0.43 (0.14, 1.17)
+0.44 (0.15, 1.24)
 </td>
 <td style="text-align:left;">
-0.115
+0.160
 </td>
 <td style="text-align:left;">
-155.97
+151.17
 </td>
 </tr>
 </tbody>
@@ -1462,13 +1461,13 @@ upper
 Subject
 </td>
 <td style="text-align:right;">
-0.0873
+0.0658
 </td>
 <td style="text-align:right;">
-0.0070
+0.0065
 </td>
 <td style="text-align:right;">
-0.3423
+0.3428
 </td>
 </tr>
 <tr>
@@ -1476,13 +1475,13 @@ Subject
 ae_category
 </td>
 <td style="text-align:right;">
-0.7926
+0.7523
 </td>
 <td style="text-align:right;">
-0.4533
+0.4550
 </td>
 <td style="text-align:right;">
-0.9116
+0.9408
 </td>
 </tr>
 <tr>
@@ -1490,13 +1489,13 @@ ae_category
 units
 </td>
 <td style="text-align:right;">
-0.1412
+0.1068
 </td>
 <td style="text-align:right;">
-0.0422
+0.0341
 </td>
 <td style="text-align:right;">
-0.2609
+0.2531
 </td>
 </tr>
 </tbody>
