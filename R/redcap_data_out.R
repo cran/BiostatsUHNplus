@@ -3,7 +3,7 @@
 #'  row per participant
 #' 
 #' @param protocol study protocol name (i.e. Example_Study)
-#' @param pullDate date of data pull, for example, 2024_01_02 (if provided) 
+#' @param pullDate date of data pull. For example, 2024_01_02 (if provided) 
 #' @param subjID key identifier field(s) for participant ID in data sets
 #' @param subjID_ineligText character text that denotes participant IDs to exclude
 #'    using first key identifier field. For example, c("New Subject") (if provided)
@@ -12,13 +12,13 @@
 #'    (if provided)
 #' @param varFilter field to use for filtering data (if provided)
 #' @param varFilter_eligPattern character text that denotes pattern for filter 
-#'    variable to include, for example, c("^Arm_A") (if provided)
+#'    variable to include. For example, c("^Arm_A") (if provided)
 #' @param setWD_files directory where the both raw and label REDCap export .csv
 #'    files are stored, following the convention for file names of 
 #'    1_DATA.csv, 1_DATA_LABELs.csv, 2_DATA.csv, 2_DATA_LABELs.csv, etc
 #' @param setWD_dataDict directory where the REDCap .csv data dictionary is stored. 
-#'    Make sure that file is saved as basic .csv file in Excel, and not UTF-8.
-#'    Must contain "DataDictionary" in file name (if provided)
+#'    Make sure that file is saved as CSV UTF-8 comma delimited.
+#'    Must contain "ictionary" in file name (if provided)
 #' @param outDir output directory where the Excel files are saved 
 #' @keywords dataframe
 #' @returns two Excel files, one containing variable names and labels and the 
@@ -185,7 +185,7 @@ redcap_data_out <- function(protocol,pullDate=NULL,
   ###Get REDCap instrument from data dictionary, if provided for non-repeat instruments;
   tryCatch({
     if (length(data$redcap_repeat_instrument == "non_repeat_instrument") > 0) {
-      fileList3 <- file.info(list.files(pattern = c("DataDictionary"), path = setWD_dataDict, 
+      fileList3 <- file.info(list.files(pattern = c("ictionary"), path = setWD_dataDict, 
                                         full.names = TRUE));
       newestFile <- rownames(fileList3)[which.max(fileList3$mtime)];
       data_dictionary <- read.csv(newestFile, header=TRUE); 
@@ -193,23 +193,25 @@ redcap_data_out <- function(protocol,pullDate=NULL,
       #sheet name has to be 28 characters or less (append rn_ for 31 max);
       
       joinNamesNRI <- NULL;
-      #i <- 1;
+      #i <- 21;
       for (i in 1:length(unique(data_dictionary[,2]))) {
         if (!unique(data_dictionary[,2])[i] %in% tables) {
           tmpTN <- paste(unique(data_dictionary[,2])[i], sep="");
           varKeep <- data_dictionary[which(data_dictionary[,2] %in% c(unique(data_dictionary[,2])[i])), 1];
           varKeep <- c(varKeep, data_dictionary[1,1], subjID, "redcap_event_name", "redcap_repeat_instrument", 
-                       "redcap_repeat_instance");
+                       "redcap_repeat_instance", "redcap_data_access_group");
           dataNRI <- data[which(data$redcap_repeat_instrument %in% c("non_repeat_instrument", "extra_sheet")), ];
           dataNRI$redcap_repeat_instrument <- NA;
           tmp <- dataNRI[, which(colnames(dataNRI) %in% c(varKeep))];
+          non_repeat_instrument <- non_repeat_instrument[, which(colnames(non_repeat_instrument) %in% c(varKeep))];
           tryCatch({
             tmp[tmp == ""] <- NA;
             tmp <- tmp[rowSums(is.na(tmp[, which(!colnames(tmp) %in% c(subjID,"redcap_event_name",
                       "redcap_repeat_instance"))])) != ncol(tmp[, which(!colnames(tmp) %in% 
                       c(subjID,"redcap_event_name","redcap_repeat_instance"))]), ]; 
             tmp$redcap_repeat_instrument <- tmpTN;
-            tmp$redcap_repeat_instance <- 1;
+            #tmp$redcap_repeat_instance <- 1;
+            tmp$redcap_repeat_instance[is.na(tmp$redcap_repeat_instance)] <- 1;
             tmp <- as.data.frame(tmp);
             assign(tmpTN, tmp);
             joinNamesNRI[i] <- tmpTN;
@@ -229,7 +231,8 @@ redcap_data_out <- function(protocol,pullDate=NULL,
   joinNames <- joinNames[which(!joinNames %in% c("NA", "repeat_instrument"))];
   joinNames <- sort(joinNames, decreasing = FALSE); #sort table name alphabetically;
   
-  list_of_datasets <- lapply(joinNames, function(x) get(x, mode="list"), envir=sys.frame(sys.parent(0)));
+  #list_of_datasets <- lapply(joinNames, function(x) get(x, mode="list"), envir=sys.frame(sys.parent(0)));
+  list_of_datasets <- lapply(joinNames, function(x) get(x, mode="list"));
   names(list_of_datasets) <- c(joinNames);
 
 

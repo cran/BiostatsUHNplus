@@ -1,6 +1,6 @@
 Package: BiostatsUHNplus
 Title: Nested Data Summary, Adverse Events and REDCap
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: c(
     person("Lisa", "Avery", , "lisa.avery@uhn.ca", role = "aut",
            comment = c(ORCID = "0000-0002-8431-5143")),
@@ -33,7 +33,7 @@ Collate: 'data.R' 'globals.R' 'as_numeric_parse.R' 'covsum_nested.R'
         'dsmb_ccru.R' 'nice_mcmcglmm.R' 'nice_mcmcglmm_icc.R'
         'ae_timeline_plot.R' 'caterpillar_plot.R' 'redcap_data_out.R'
 NeedsCompilation: no
-Packaged: 2024-12-06 18:40:30 UTC; t109810uhn
+Packaged: 2025-02-03 05:26:49 UTC; t109810uhn
 Author: Lisa Avery [aut] (<https://orcid.org/0000-0002-8431-5143>),
   Zeynep Baskurt [aut],
   Osvaldo Espin-Garcia [aut],
@@ -46,4 +46,4 @@ Author: Lisa Avery [aut] (<https://orcid.org/0000-0002-8431-5143>),
   Wei Xu [aut]
 Maintainer: Tyler Pittman <tyler.pittman@uhn.ca>
 Repository: CRAN
-Date/Publication: 2024-12-06 18:50:02 UTC
+Date/Publication: 2025-02-03 08:00:10 UTC
